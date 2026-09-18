@@ -18,6 +18,108 @@ npm run check      # typecheck + tests
 > that cost us time), how approvals work in code, and how to build this properly for
 > production. This README is the reference; that guide is the explanation.
 
+## What's in this repository
+
+The whole repo is this one prototype — a Vite + React 18 + TypeScript app at the root.
+There is no monorepo, no backend, and no build output checked in. 39 tracked files:
+roughly 2,200 lines of TypeScript (580 of them tests), two prose documents, and five
+photographs.
+
+```
+.
+├── index.html                     Vite entry document
+├── package.json                   Scripts and deps — React 18, Vite 5, Vitest 2
+├── package-lock.json              Exact dependency tree; commit changes to it
+├── tsconfig.json                  Strict TS config
+├── vite.config.ts                 Vite + React plugin, and the Vitest config
+├── .gitignore                     node_modules, dist, *.local, .DS_Store, tsbuildinfo
+│
+├── README.md                      This file — the reference
+├── docs/
+│   └── PHOTOS-GUIDE.md            The explanation: licences, sourcing, API gotchas (488 lines)
+│
+├── public/
+│   └── images/                    The five served photographs, 180 KB total
+│       ├── digital-stethoscope.jpg        (512×512, cropped from the upstream file)
+│       ├── blood-pressure-cuff.jpg
+│       ├── surgical-headlamp.jpg
+│       ├── aircast-walking-boot.jpg
+│       └── surgical-suture-kit.jpg
+│
+└── src/
+    ├── main.tsx                   React root
+    ├── App.tsx                    Hash routing; the admin route is off the main nav
+    ├── styles.css                 All styling, hand-written (16 KB, no CSS framework)
+    │
+    ├── routes/
+    │   ├── TransferStock.tsx      The storeroom screen — what a normal user sees
+    │   └── AdminImageLibrary.tsx  The admin page: review, search, approve, assign
+    │
+    ├── components/
+    │   ├── PlaceholderImage.tsx   Approved image, or a neutral fallback. No third path.
+    │   ├── ImageCredit.tsx        Visible CC BY credit + the full credits block
+    │   └── PendingReview.tsx      The four-checkbox approval panel
+    │
+    ├── image-library/             The domain logic — read this first
+    │   ├── types.ts               The three data layers: Placeholder, LibraryImage, Assignment
+    │   ├── placeholders.ts        The five slot ids. An id is a contract; never repurpose one.
+    │   ├── resolve-image.ts       The app's ONLY route to an image. Assigned AND approved.
+    │   ├── store.ts               Library + assignments; localStorage in the prototype
+    │   ├── useImageLibrary.ts     React bindings over the store
+    │   ├── license-policy.ts      Licence allowlist — CC0, PDM, CC BY. Nothing else.
+    │   ├── ai-heuristic.ts        The "likely non-AI" metadata filter
+    │   ├── openverse.ts           Search only. Never writes to the store.
+    │   ├── search-source.ts       Live API, or offline fixtures
+    │   ├── asset-url.ts           Resolves /images/… against Vite's BASE_URL
+    │   ├── library.seed.json      The 5 checked-in images — all pending, none approved
+    │   ├── assignments.seed.json  Empty: []. Nothing is bound to a slot yet.
+    │   └── fixtures/
+    │       └── openverse-sample.json   11 recorded search results for offline work
+    │
+    └── __tests__/                 86 tests, 5 suites, all passing
+        ├── license-policy.test.ts    16 — the allowlist
+        ├── ai-heuristic.test.ts      21 — word-boundary matching, the airway/repair cases
+        ├── approval.test.ts          28 — the four-box gate and what gets stored
+        ├── library-seed.test.ts      12 — fails the build if anything ships pre-approved
+        └── pipeline.test.ts           9 — search → candidate → pending → approved
+```
+
+### What is *not* in git
+
+`node_modules/` and `dist/` are ignored — run `npm install` after cloning. Nothing else is
+generated; every file above is source you can read.
+
+### The seed state, exactly
+
+This matters more than it looks, because it is what you see on first run:
+
+| | |
+|---|---|
+| Images in `library.seed.json` | **5** |
+| Of those, `approved` | **0** — all five are `pending` |
+| Entries in `assignments.seed.json` | **0** — the file is `[]` |
+| Photos visible on the Transfer stock screen | **none**, by design |
+
+So a fresh clone shows neutral grey placeholders on every storeroom row. That is not a
+broken build. `resolveImage()` returns an image only when a slot has an assignment *and*
+the record is `approved`, and nothing in the repo satisfies both. To see a photograph on
+a screen you have to go to `#/admin/image-library` and approve one yourself — which is the
+behaviour the prototype exists to demonstrate.
+
+Two of the five carry a `sourcingNote` warning that the match is imperfect (the surgical
+headlamp is a theatre lamp, not head-worn; the aircast boot has a brand name across the
+strap). Read those notes before ticking the boxes — noticing them is the exercise.
+
+### Commit history
+
+| Commit | What |
+|---|---|
+| `9ab8a50` | `Add files via upload` — the original `.zip`, committed as a single binary |
+| `80971ae` | The archive unpacked into the repo root, and the `.zip` removed |
+
+The `.zip` is no longer in the working tree because its contents are now tracked
+individually. It remains retrievable from `9ab8a50` if you ever want the original bundle.
+
 ## How images reach the app
 
 One library, two statuses, and a search result must cross every boundary to go live:
