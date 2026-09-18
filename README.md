@@ -12,6 +12,19 @@ npm run check      # typecheck + tests
 - `#/` — the Transfer stock screen
 - `#/admin/image-library` — the Image Library (admin only)
 
+## What it looks like
+
+**Transfer stock** — the storeroom screen. Every row shows a neutral placeholder, because
+nothing is approved yet. This is the correct first-run state, not a broken build.
+
+![The Transfer stock screen, showing eight storeroom rows with neutral placeholder thumbnails](docs/screenshots/transfer-stock.png)
+
+**Image Library (admin)** — where a named human reviews each sourced image and approves it.
+The five photos exist in `public/images/` and are visible here while still being invisible
+to the live screen above.
+
+![The admin Image Library, showing the five placeholder slots and the pending review queue](docs/screenshots/admin-image-library.png)
+
 > **New here? Read [`docs/PHOTOS-GUIDE.md`](docs/PHOTOS-GUIDE.md) first.**
 > A plain-English guide for designers and engineers: what the licence rules mean and why,
 > how to add a photo click by click, how to use the Openverse API (including the gotchas
