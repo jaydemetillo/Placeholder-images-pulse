@@ -14,8 +14,16 @@ npm run check      # typecheck + tests
 
 ## What it looks like
 
-**Transfer stock** — the storeroom screen. Every row shows a neutral placeholder, because
-nothing is approved yet. This is the correct first-run state, not a broken build.
+**Transfer stock, after approval** — what the screen is actually for. Each row carries its
+own photograph, and the two CC BY images show a visible credit under the item name, with
+the full entry in *Image credits* at the foot. CC0 images carry no inline credit, because
+none is legally required.
+
+![The Transfer stock screen with a photograph on every row, CC BY credits under two of them, and an Image credits block at the foot](docs/screenshots/transfer-stock-with-photos.png)
+
+**Transfer stock, on a fresh clone** — the same screen before anyone approves anything.
+Every row shows a neutral placeholder. This is the correct first-run state, not a broken
+build.
 
 ![The Transfer stock screen, showing eight storeroom rows with neutral placeholder thumbnails](docs/screenshots/transfer-stock.png)
 
