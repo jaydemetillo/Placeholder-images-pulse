@@ -22,6 +22,14 @@ export default defineConfig({
         target: 'https://api.openverse.org',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/openverse/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // The thumbnail endpoint answers 406 to the long `Accept` header a browser
+            // sends for an <img> (`image/avif,image/webp,…,*/*;q=0.8`). Ask for a plain
+            // image instead. Search requests keep their own `application/json`.
+            if (req.url?.includes('/thumb')) proxyReq.setHeader('Accept', 'image/*');
+          });
+        },
       },
     },
   },
