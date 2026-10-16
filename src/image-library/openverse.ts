@@ -28,9 +28,34 @@ export const OPENVERSE_DEV_PROXY_ENDPOINT = '/openverse/v1/images/';
  * does a production build, which has no proxy behind it.
  */
 export function searchEndpoint(): string {
+  return useDevProxy() ? OPENVERSE_DEV_PROXY_ENDPOINT : OPENVERSE_ENDPOINT;
+}
+
+function useDevProxy(): boolean {
   const inBrowser = typeof window !== 'undefined';
   const isDev = Boolean((import.meta as { env?: { DEV?: boolean } }).env?.DEV);
-  return inBrowser && isDev ? OPENVERSE_DEV_PROXY_ENDPOINT : OPENVERSE_ENDPOINT;
+  return inBrowser && isDev;
+}
+
+const OPENVERSE_ORIGIN = 'https://api.openverse.org';
+
+/**
+ * Rewrites an Openverse-hosted URL onto the dev proxy.
+ *
+ * Preview thumbnails are served from `api.openverse.org/v1/images/<id>/thumb/`, and
+ * loading one straight from the page fails the same way a direct search does — that
+ * endpoint answers 406 to some of the `Accept` headers a browser sends for an `<img>`.
+ * Sending it through the proxy lets Node ask for it with a header it accepts, so a
+ * candidate shows a picture instead of a broken-image icon.
+ *
+ * URLs on any other host — the upstream file itself, on Flickr or Wikimedia — are left
+ * alone. They are not ours to proxy, and they are not what the preview uses.
+ */
+export function proxiedOpenverseUrl(url: string | null): string | null {
+  if (!url) return url;
+  if (!useDevProxy()) return url;
+  if (!url.startsWith(`${OPENVERSE_ORIGIN}/`)) return url;
+  return `/openverse${url.slice(OPENVERSE_ORIGIN.length)}`;
 }
 
 export interface SearchOptions {
@@ -71,7 +96,8 @@ function toCandidate(result: OpenverseResult): Candidate {
     title,
     creator: result.creator?.trim() || null,
     imageUrl: result.url,
-    thumbnailUrl: result.thumbnail ?? null,
+    // Proxied in dev so the preview actually renders; see `proxiedOpenverseUrl`.
+    thumbnailUrl: proxiedOpenverseUrl(result.thumbnail ?? null),
     sourcePageUrl: result.foreign_landing_url!,
     license,
     licenseVersion: version,
