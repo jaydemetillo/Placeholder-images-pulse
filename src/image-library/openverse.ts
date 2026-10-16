@@ -12,6 +12,27 @@ import type { AllowedLicense, Candidate, OpenverseResult, RejectionReason } from
 
 export const OPENVERSE_ENDPOINT = 'https://api.openverse.org/v1/images/';
 
+/** Same endpoint, reached through the dev server's proxy. See `vite.config.ts`. */
+export const OPENVERSE_DEV_PROXY_ENDPOINT = '/openverse/v1/images/';
+
+/**
+ * Where a search request should actually be sent.
+ *
+ * In a browser, a direct call to api.openverse.org is blocked before it returns: the API
+ * sends no CORS headers for this origin, so `fetch` rejects with an opaque
+ * "Failed to fetch" and the admin page shows "Search failed" with nothing useful in it.
+ * During development we therefore go through the Vite proxy, which makes the request
+ * same-origin and performs the real hop in Node.
+ *
+ * Node callers — tests, scripts — have no CORS to satisfy and keep the absolute URL, as
+ * does a production build, which has no proxy behind it.
+ */
+export function searchEndpoint(): string {
+  const inBrowser = typeof window !== 'undefined';
+  const isDev = Boolean((import.meta as { env?: { DEV?: boolean } }).env?.DEV);
+  return inBrowser && isDev ? OPENVERSE_DEV_PROXY_ENDPOINT : OPENVERSE_ENDPOINT;
+}
+
 export interface SearchOptions {
   pageSize?: number;
   page?: number;
@@ -28,7 +49,7 @@ export function buildSearchUrl(query: string, opts: SearchOptions = {}): string 
     page_size: String(opts.pageSize ?? 20),
     page: String(opts.page ?? 1),
   });
-  return `${OPENVERSE_ENDPOINT}?${params.toString()}`;
+  return `${searchEndpoint()}?${params.toString()}`;
 }
 
 export interface FilteredResult {
